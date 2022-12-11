@@ -4,7 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import type { Request, Response } from "express";
-import playwright from "playwright";
+import playwright from "playwright-core";
 
 dotenv.config();
 
@@ -48,9 +48,12 @@ interface IOptions {
   path: string;
 }
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
+  const executablePath = await chromium.executablePath;
+  console.log(executablePath);
   const browser = await playwright.chromium.launch({
     args: chromium.args,
-    executablePath: await chromium.executablePath,
+    executablePath,
+    headless: chromium.headless,
   });
   const context = await browser.newContext();
   const page = await context.newPage();
