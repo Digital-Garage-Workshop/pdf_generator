@@ -1,4 +1,5 @@
 import bodyParser from "body-parser";
+import chromium from "chrome-aws-lambda";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -47,7 +48,10 @@ interface IOptions {
   path: string;
 }
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
-  const browser = await playwright.chromium.launch();
+  const browser = await playwright.chromium.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath,
+  });
   const context = await browser.newContext();
   const page = await context.newPage();
   await page.goto(path, { waitUntil: "networkidle" });
