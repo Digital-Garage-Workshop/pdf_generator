@@ -24,19 +24,23 @@ app.get("/", (request: Request, response: Response) => {
 });
 
 app.post("/pdf", async (request: Request, response: Response) => {
-  const { pageRanges, path } = request.body;
+  try {
+    const { pageRanges, path } = request.body;
 
-  const pdf = request.headers.origin
-    ? await generatePDF({
-        pageRanges,
-        path: `${request.headers.origin}${path}`,
-      })
-    : null;
+    const pdf = request.headers.origin
+      ? await generatePDF({
+          pageRanges,
+          path: `${request.headers.origin}${path}`,
+        })
+      : null;
 
-  return response
-    .status(200)
-    .setHeader("Content-Type", "application/pdf")
-    .send(pdf);
+    return response
+      .status(200)
+      .setHeader("Content-Type", "application/pdf")
+      .send(pdf);
+  } catch (error) {
+    return response.status(400).send(error);
+  }
 });
 
 app.listen(port, () => {
@@ -48,11 +52,9 @@ interface IOptions {
   path: string;
 }
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
-  const executablePath = await chromium.executablePath;
-  console.log(executablePath);
   const browser = await playwright.chromium.launch({
     args: chromium.args,
-    executablePath,
+    executablePath: await chromium.executablePath,
     headless: chromium.headless,
   });
   const context = await browser.newContext();
