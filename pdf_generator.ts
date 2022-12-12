@@ -8,8 +8,12 @@ interface IOptions {
 }
 let browser: Browser | null = null;
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
-  const start = new Date().getTime();
+  const timer: { key: string; time: number }[] = [];
   try {
+    timer.push({
+      key: "start",
+      time: new Date().getTime(),
+    });
     if (!browser) {
       browser = await playwright.chromium.launch({
         args: chromium.args,
@@ -17,18 +21,22 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
         headless: chromium.headless,
       });
     }
-    console.log("browser", new Date().getTime() - start);
+
+    timer.push({
+      key: "browser",
+      time: new Date().getTime(),
+    });
 
     const context = await browser.newContext();
-    console.log("context", new Date().getTime() - start);
     const page = await context.newPage();
-    console.log("page", new Date().getTime() - start);
     await page.goto(path, { waitUntil: "networkidle" });
-    console.log("goto", new Date().getTime() - start);
+    timer.push({
+      key: "goto",
+      time: new Date().getTime(),
+    });
 
     const pdfGenerator = page.locator(".fixed");
     await pdfGenerator.evaluate((node) => (node.style.visibility = "hidden"));
-    console.log("evaluate", new Date().getTime() - start);
 
     const pdf = await page.pdf({
       format: "A4",
@@ -36,11 +44,21 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
       preferCSSPageSize: true,
       printBackground: true,
     });
-    console.log("pdf", new Date().getTime() - start);
+    timer.push({
+      key: "pdf",
+      time: new Date().getTime(),
+    });
+
+    timer.forEach(({ key, time }) => {
+      if (key !== "start") {
+        console.log(key, timer[0].time - time);
+      }
+    });
 
     return pdf;
   } catch (error) {
     console.log(error);
+  } finally {
     await browser?.close();
   }
 };
