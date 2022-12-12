@@ -8,6 +8,7 @@ interface IOptions {
 }
 let browser: Browser | null = null;
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
+  const start = new Date().getTime();
   try {
     if (!browser) {
       browser = await playwright.chromium.launch({
@@ -16,13 +17,18 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
         headless: chromium.headless,
       });
     }
+    console.log("browser", new Date().getTime() - start);
 
     const context = await browser.newContext();
+    console.log("context", new Date().getTime() - start);
     const page = await context.newPage();
+    console.log("page", new Date().getTime() - start);
     await page.goto(path, { waitUntil: "networkidle" });
+    console.log("goto", new Date().getTime() - start);
 
     const pdfGenerator = page.locator(".fixed");
     await pdfGenerator.evaluate((node) => (node.style.visibility = "hidden"));
+    console.log("evaluate", new Date().getTime() - start);
 
     const pdf = await page.pdf({
       format: "A4",
@@ -30,6 +36,7 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
       preferCSSPageSize: true,
       printBackground: true,
     });
+    console.log("pdf", new Date().getTime() - start);
 
     return pdf;
   } catch (error) {

@@ -12,7 +12,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 const jsonParser = bodyParser.json();
-const logger = morgan("tiny");
+const logger = morgan(":method :url :status - :response-time ms");
 
 app.use(jsonParser);
 app.use(
