@@ -31,7 +31,6 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
       time: new Date().getTime(),
     });
 
-    // const pdfGenerator = page.locator(".fixed");
     const pdfGenerator = page.getByTestId("pdf_generator");
     await pdfGenerator.evaluate((node) => (node.style.visibility = "hidden"));
 
