@@ -9,11 +9,8 @@ interface IOptions {
 let browser: Browser | null = null;
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
   const timer: { key: string; time: number }[] = [];
+  const start = new Date().getTime();
   try {
-    timer.push({
-      key: "start",
-      time: new Date().getTime(),
-    });
     if (!browser) {
       browser = await playwright.chromium.launch({
         args: chromium.args,
@@ -50,9 +47,7 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
     });
 
     timer.forEach(({ key, time }) => {
-      if (key !== "start") {
-        console.log(key, timer[0].time - time);
-      }
+      console.log(key, time - start);
     });
 
     return pdf;
