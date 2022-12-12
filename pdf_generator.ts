@@ -6,18 +6,20 @@ interface IOptions {
   pageRanges?: string;
   path: string;
 }
+let browser: Browser | null = null;
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
-  let browser: Browser | null = null;
-
   try {
     const timer: { key: string; time: number }[] = [];
     const start = new Date().getTime();
 
-    browser = await playwright.chromium.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
-    });
+    if (!browser) {
+      browser = await playwright.chromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
+      });
+    }
+
     timer.push({
       key: "browser",
       time: new Date().getTime(),
@@ -54,5 +56,6 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
     console.log(error);
   } finally {
     await browser?.close();
+    browser = null;
   }
 };
