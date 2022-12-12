@@ -45,9 +45,9 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
       time: new Date().getTime(),
     });
 
-    timer.forEach(({ key, time }) => {
-      console.log(key, time - start);
-    });
+    // timer.forEach(({ key, time }) => {
+    //   console.log(key, time - start);
+    // });
 
     return pdf;
   } catch (error) {
