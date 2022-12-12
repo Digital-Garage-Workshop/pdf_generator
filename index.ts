@@ -4,7 +4,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import type { Request, Response } from "express";
-import playwright from "playwright-core";
+import playwright from "playwright";
+import type { Browser } from "playwright";
 
 dotenv.config();
 
@@ -24,23 +25,23 @@ app.get("/", (request: Request, response: Response) => {
 });
 
 app.post("/pdf", async (request: Request, response: Response) => {
-  try {
-    const { pageRanges, path } = request.body;
+  const { pageRanges, path } = request.body;
 
-    const pdf = request.headers.origin
-      ? await generatePDF({
-          pageRanges,
-          path: `${request.headers.origin}${path}`,
-        })
-      : null;
+  const pdf = request.headers.origin
+    ? await generatePDF({
+        pageRanges,
+        path: `${request.headers.origin}${path}`,
+      })
+    : null;
 
-    return response
-      .status(200)
-      .setHeader("Content-Type", "application/pdf")
-      .send(pdf);
-  } catch (error) {
-    return response.status(400).send(error);
+  if (!pdf) {
+    return response.status(400).send("PDF generation failed");
   }
+
+  return response
+    .status(200)
+    .setHeader("Content-Type", "application/pdf")
+    .send(pdf);
 });
 
 app.listen(port, () => {
@@ -52,25 +53,31 @@ interface IOptions {
   path: string;
 }
 export const generatePDF = async ({ pageRanges, path }: IOptions) => {
-  const browser = await playwright.chromium.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath,
-    headless: chromium.headless,
-  });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await page.goto(path, { waitUntil: "networkidle" });
+  let browser: Browser | null = null;
+  try {
+    browser = await playwright.chromium.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+    });
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto(path, { waitUntil: "networkidle" });
 
-  const pdfGenerator = page.locator(".fixed");
-  await pdfGenerator.evaluate((node) => (node.style.visibility = "hidden"));
+    const pdfGenerator = page.locator(".fixed");
+    await pdfGenerator.evaluate((node) => (node.style.visibility = "hidden"));
 
-  const pdf = await page.pdf({
-    format: "A4",
-    pageRanges,
-    preferCSSPageSize: true,
-    printBackground: true,
-  });
-  await browser.close();
+    const pdf = await page.pdf({
+      format: "A4",
+      pageRanges,
+      preferCSSPageSize: true,
+      printBackground: true,
+    });
 
-  return pdf;
+    return pdf;
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await browser?.close();
+  }
 };
