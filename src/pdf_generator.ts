@@ -34,6 +34,12 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
     const pdfGenerator = page.getByTestId("pdf_generator");
     await pdfGenerator.evaluate((node) => (node.style.visibility = "hidden"));
 
+    const main = page.getByTestId("main");
+    await main.evaluate((node) => (node.style.padding = "0px"));
+
+    const pages = page.getByTestId("pages");
+    await pages.evaluate((node) => (node.style.rowGap = "0px"));
+
     const pdf = await page.pdf({
       format: "A4",
       pageRanges,
