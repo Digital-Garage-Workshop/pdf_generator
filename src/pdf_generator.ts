@@ -13,11 +13,15 @@ export const generatePDF = async ({ pageRanges, path }: IOptions) => {
     const timer: { key: string; time: number }[] = [];
     const start = new Date().getTime();
 
-    browser = await playwright.chromium.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
-    });
+    const options =
+      process.env.NODE_ENV === "production"
+        ? {
+            args: chromium.args,
+            executablePath: await chromium.executablePath,
+            headless: chromium.headless,
+          }
+        : {};
+    browser = await playwright.chromium.launch(options);
     timer.push({
       key: "browser",
       time: new Date().getTime(),
